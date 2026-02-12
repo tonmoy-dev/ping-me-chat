@@ -1,13 +1,67 @@
 import express from "express";
 import { createServer } from "node:http";
+import { Server } from "socket.io";
 
 const PORT = 3001;
+
+// room events
+const JOIN_ROOM = 'joinChatRoom';
+const CHAT_MESSAGE = 'chatMessage';
+const TYPING = 'userTyping';
+const STOP_TYPING = 'userStopTyping';
+const ROOM_NEWS = 'chatRoomNews';
+const USER_LEAVE = 'userLeaveChatRoom';
+const ROOM = 'pingMeChatRoom';
 
 // initialize the app
 const app = express();
 
-// create the server instance
+// create the server
 const server = createServer(app);
+
+// create the socket server instance
+const io = new Server(server);
+
+// start socket io connection
+io.on('connection', (socket) => {
+  console.log(`User ${socket.id} connected`);
+
+  // user join to socket room
+  socket.on(JOIN_ROOM, async (userName) => {
+    console.log(`${userName} is joined to the chat.`)
+
+    // join to room
+    await socket.join(ROOM);
+
+    // broadcast to room
+    socket.to(ROOM).emit(ROOM_NEWS, userName)
+  })
+
+  // user sends message
+  socket.on(CHAT_MESSAGE, (message) => {
+    socket.to(ROOM).emit(CHAT_MESSAGE, message);
+  })
+
+  // user typing 
+  socket.on(TYPING, (UserName) => {
+    socket.to(ROOM).emit(TYPING, UserName)
+  })
+
+  // user stop typing
+  socket.on(STOP_TYPING, (userName) => {
+    socket.to(ROOM).emit(STOP_TYPING, userName)
+  })
+
+  // user leave room
+  socket.on(USER_LEAVE, (userName) => {
+    socket.to(ROOM).emit(USER_LEAVE, userName)
+  })
+
+  // disconnect from socket io
+  socket.on('disconnect', (reason) => {
+    console.log('User disconnect from the server for ', reason);
+  })
+})
 
 
 app.get('/', (req, res) => {
