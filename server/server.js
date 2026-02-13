@@ -20,7 +20,11 @@ const app = express();
 const server = createServer(app);
 
 // create the socket server instance
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*'
+  }
+});
 
 // start socket io connection
 io.on('connection', (socket) => {
@@ -59,7 +63,7 @@ io.on('connection', (socket) => {
 
   // disconnect from socket io
   socket.on('disconnect', (reason) => {
-    console.log('User disconnect from the server for ', reason);
+    console.log(`User disconnect from the server for ${reason}`);
   })
 })
 

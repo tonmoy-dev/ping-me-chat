@@ -1,5 +1,12 @@
+import { useEffect, useRef } from "react"
+import { connectWS } from "./lib/ws";
 
 function App() {
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    socketRef.current = connectWS();
+  }, [])
 
 
   return (
