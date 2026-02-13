@@ -11,23 +11,44 @@ const STOP_TYPING = 'userStopTyping';
 const ROOM_NEWS = 'chatRoomNews';
 const USER_LEAVE = 'userLeaveChatRoom';
 
+const getCurrentTime = () => {
+  const now = new Date();
+  const currentTime = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  return currentTime;
+}
+
 
 function App() {
   const socketRef = useRef(null);
   const [userName, setUserName] = useState('');
   const [showNamePopUp, setShowNamePopUp] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
+  const [textMessage, setTextMessage] = useState('');
 
   useEffect(() => {
     socketRef.current = connectWS();
 
     // connect to room
-    socketRef.current.on('connection', (socket) => {
-      console.log('so', socket);
+    socketRef.current.on('connect', () => {
+
+      socketRef.current.on(CHAT_MESSAGE, (message) => {
+        // push messages to chat box
+        setChatMessages((prevMessages) => [...prevMessages, message])
+      });
+
 
     })
 
-    console.log('socket', socketRef.current)
+    console.log('socket', socketRef.current);
+
+    // clean up functions
+    return () => {
+      socketRef.current.off(CHAT_MESSAGE);
+    }
   }, []);
 
   const handleNameSubmit = (e) => {
@@ -39,6 +60,35 @@ function App() {
     setShowNamePopUp(false);
   }
 
+  const sendMessages = () => {
+    const text = textMessage?.trim();
+    if (!text) return;
+
+    const message = {
+      id: Date.now(),
+      sender: userName,
+      message: text,
+      time: getCurrentTime()
+    }
+    socketRef.current.emit(CHAT_MESSAGE, message);
+
+    setChatMessages((prev) => [...prev, message]);
+    setTextMessage(' ');
+
+    // emit the current message
+  }
+
+  const handleMessageSubmit = (e) => {
+    e.preventDefault();
+    sendMessages()
+  }
+
+  const handleMessageKeyDown = (e) => {
+    if (e.key == 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessages();
+    }
+  }
 
   return (
     <>
@@ -97,47 +147,39 @@ function App() {
                   <>
                     {/* CHAT MESSAGE LIST */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-100 flex flex-col">
-                      {/* MESSAGE OF SENDER */}
-                      <div
-                        className='flex justify-end'>
-                        <div
-                          className='max-w-[78%] p-3 my-2 rounded-[18px] text-sm leading-5 shadow-sm bg-orange-500 text-white'
-                        >
-                          <div className="break-words whitespace-pre-wrap">
-                            Chat Message
-                          </div>
-                          <div className="flex justify-between items-center mt-1 gap-16">
-                            <div className="text-[11px] font-bold">Name</div>
-                            <div className="text-[11px] text-gray-500 text-right">
-                              Time
+                      {/* MESSAGE OF SENDER OR MESSAGE OF RECEIVER  */}
+                      {
+                        chatMessages.map(chat => {
+                          const userOwnMessage = chat?.sender === userName;
+                          return (
+                            <div
+                              key={chat?.id}
+                              className={`flex ${userOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                              <div
+                                className={`
+                                  max-w-[78%] p-3 my-2 rounded-[18px] text-sm leading-5 shadow-sm ${userOwnMessage ? 'bg-orange-300 text-[#303030] rounded-br-2xl' : 'bg-white text-[#303030] rounded-bl-2xl'}`}
+                              >
+                                <div className="break-words whitespace-pre-wrap">
+                                  {chat?.message}
+                                </div>
+                                <div className="flex justify-between items-center mt-3 gap-16">
+                                  <div className="text-[11px]  text-gray-500 font-bold">{chat?.sender}</div>
+                                  <div className="text-[11px] text-gray-500 text-right">
+                                    {chat?.time}
+                                  </div>
+                                </div>
+                                <p className="text-xs text-gray-500 text-right">✓✓</p>
+                              </div>
                             </div>
-                          </div>
-                          <p className="text-xs text-gray-400 text-right">✓✓</p>
-                        </div>
-                      </div>
-                      {/* MESSAGE OF RECEIVER */}
-                      <div
-                        className='flex justify-start'>
-                        <div
-                          className='max-w-[78%] p-3 my-2 rounded-[18px] text-sm leading-5 shadow-sm bg-white text-black'
-                        >
-                          <div className="break-words whitespace-pre-wrap">
-                            Chat Message
-                          </div>
-                          <div className="flex justify-between items-center mt-1 gap-16">
-                            <div className="text-[11px] font-bold">Name</div>
-                            <div className="text-[11px] text-gray-500 text-right">
-                              Time
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                          )
+                        })
+                      }
                     </div>
                   </>
                 ) : (
                   <>
                     {/* NO CHAT MESSAGES */}
-                    <div className="flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center space-y-3">
+                    <div className="flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center">
                       <p>No messages yet. Start the conversation 👋</p>
                     </div>
                   </>
@@ -145,17 +187,25 @@ function App() {
               }
               {/* CHAT TEXTAREA */}
               <div className="px-4 py-3 border-t border-gray-200 bg-white">
-                <div className="flex items-center justify-between gap-4 border border-gray-200 rounded-full">
-                  <textarea
-                    rows={1}
-                    placeholder="Type a message..."
-                    className="w-full resize-none px-4 py-4 text-sm outline-none"
-                  />
-                  <button
-                    className="bg-orange-500 text-white px-4 py-2 mr-2 rounded-full text-sm font-medium cursor-pointer">
-                    Send
-                  </button>
-                </div>
+                <form onSubmit={handleMessageSubmit}>
+                  <div className="flex items-center justify-between gap-4 border border-gray-200 rounded-full">
+                    <textarea
+                      rows={1}
+                      value={textMessage}
+                      onChange={(e) => {
+                        setTextMessage(e.target.value);
+                      }}
+                      onKeyDown={handleMessageKeyDown}
+                      placeholder="Type a message..."
+                      className="w-full resize-none px-4 py-4 text-sm outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-orange-500 text-white px-4 py-2 mr-2 rounded-full text-sm font-medium cursor-pointer">
+                      Send
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </>
