@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { connectWS } from "./lib/ws";
+import toast, { Toaster } from 'react-hot-toast';
 
 const ROOM_NAME = 'pingMeChatRoom';
 
@@ -40,10 +41,15 @@ function App() {
         setChatMessages((prevMessages) => [...prevMessages, message])
       });
 
-
+      socketRef.current.on(ROOM_NEWS, (userName) => {
+        const message = `${userName} is joined in this chat!`
+        toast(message, {
+          icon: '👏',
+        });
+      })
     })
 
-    console.log('socket', socketRef.current);
+    // console.log('socket', socketRef.current);
 
     // clean up functions
     return () => {
@@ -179,7 +185,7 @@ function App() {
                 ) : (
                   <>
                     {/* NO CHAT MESSAGES */}
-                    <div className="flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center">
+                    <div className="flex flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center">
                       <p>No messages yet. Start the conversation 👋</p>
                     </div>
                   </>
@@ -212,6 +218,7 @@ function App() {
         )}
 
       </div>
+      <div><Toaster /></div>
     </>
   )
 }
