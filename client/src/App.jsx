@@ -26,10 +26,12 @@ const getCurrentTime = () => {
 
 function App() {
   const socketRef = useRef(null);
+  const timer = useRef(null);
   const [userName, setUserName] = useState('');
   const [showNamePopUp, setShowNamePopUp] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [textMessage, setTextMessage] = useState('');
+  const [typingUsers, setTypingUsers] = useState([]);
 
   useEffect(() => {
     socketRef.current = connectWS();
@@ -56,15 +58,56 @@ function App() {
           icon: '👏',
         });
       })
-    })
 
+      // users typing
+      socketRef.current.on(TYPING, (userName) => {
+        // set typing users
+        setTypingUsers((prevTypingUsers) => {
+          // remove the user name if already exists
+          const isUserExist = prevTypingUsers.find((typingUser) => typingUser === userName);
+          if (!isUserExist) return [...prevTypingUsers, userName]
+
+          return prevTypingUsers;
+        })
+      })
+
+      // users stop typing
+      socketRef.current.on(STOP_TYPING, (userName) => {
+        setTypingUsers((prevTypingUsers) => {
+          const filteredTypingUsers = prevTypingUsers.filter((typingUser) => typingUser !== userName);
+          return filteredTypingUsers;
+        })
+      })
+    })
     // console.log('socket', socketRef.current);
 
     // clean up functions
     return () => {
       socketRef.current.off(CHAT_MESSAGE);
+      socketRef.current.off(ROOM_NEWS);
+      socketRef.current.off(USER_LEAVE)
+      socketRef.current.off(TYPING);
+      socketRef.current.off(STOP_TYPING)
     }
   }, []);
+
+  useEffect(() => {
+    if (!textMessage) return;
+    if (textMessage) {
+      // emit typing event
+      socketRef.current.emit(TYPING, userName);
+      clearTimeout(timer.current);
+    }
+
+    timer.current = setTimeout(() => {
+      socketRef.current.emit(STOP_TYPING, userName)
+    }, 1000)
+
+    return () => {
+      clearTimeout(timer.current)
+    }
+
+  }, [textMessage, userName])
 
   const handleNameSubmit = (e) => {
     e.preventDefault();
@@ -161,6 +204,15 @@ function App() {
                 </div>
                 <div className="flex-1">
                   <div className="text-xs md:text-base text-gray-500">PING ME Chat</div>
+                  {
+                    typingUsers?.length > 0 ? (
+                      <div className="text-xs text-gray-500">
+                        {typingUsers?.join(', ')} is typing...
+                      </div>
+                    ) : (
+                      ''
+                    )
+                  }
                 </div>
 
                 <div className="text-xs md:text-sm text-gray-500">
