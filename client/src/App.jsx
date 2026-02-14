@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { connectWS } from "./lib/ws";
 import toast, { Toaster } from 'react-hot-toast';
+import { LogOut } from "lucide-react";
 
 const ROOM_NAME = 'pingMeChatRoom';
 
@@ -43,6 +44,14 @@ function App() {
 
       socketRef.current.on(ROOM_NEWS, (userName) => {
         const message = `${userName} is joined in this chat!`
+        toast(message, {
+          icon: '👏',
+        });
+      })
+
+      // user leave the chat
+      socketRef.current.on(USER_LEAVE, (userName) => {
+        const message = `${userName} is left this chat!`
         toast(message, {
           icon: '👏',
         });
@@ -96,6 +105,13 @@ function App() {
     }
   }
 
+  const handleLeaveChat = () => {
+    socketRef.current.emit(USER_LEAVE, userName);
+    setUserName('');
+    setShowNamePopUp(true);
+    // setChatMessages([]);
+  }
+
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-zinc-100 p-4 font-inter">
@@ -142,10 +158,15 @@ function App() {
 
                 <div className="text-sm text-gray-500">
                   Joined as
-                  <span className="font-medium text-[#303030] capitalize ml-2">
+                  <span className="font-medium text-[#303030] capitalize mx-2">
                     {userName}
                   </span>
                 </div>
+                <LogOut
+                  className="cursor-pointer"
+                  color="#ff6900"
+                  onClick={handleLeaveChat}
+                />
               </div>
 
               {
@@ -198,6 +219,7 @@ function App() {
                     <textarea
                       rows={1}
                       value={textMessage}
+                      name="message"
                       onChange={(e) => {
                         setTextMessage(e.target.value);
                       }}
