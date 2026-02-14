@@ -1,8 +1,8 @@
 import express from "express";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import dotenv from "dotenv"
 
-const PORT = process.env.PORT || 3001;
 
 // room events
 const JOIN_ROOM = 'joinChatRoom';
@@ -13,11 +13,15 @@ const ROOM_NEWS = 'chatRoomNews';
 const USER_LEAVE = 'userLeaveChatRoom';
 const ROOM = 'pingMeChatRoom';
 
+dotenv.config();
+
 // initialize the app
 const app = express();
 
 // create the server
 const server = createServer(app);
+
+const PORT = process.env.PORT || 5000;
 
 // create the socket server instance
 const io = new Server(server, {
