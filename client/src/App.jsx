@@ -27,6 +27,7 @@ const getCurrentTime = () => {
 function App() {
   const socketRef = useRef(null);
   const timer = useRef(null);
+  const chatMessagesEl = useRef(null)
   const [userName, setUserName] = useState('');
   const [showNamePopUp, setShowNamePopUp] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
@@ -99,15 +100,25 @@ function App() {
       clearTimeout(timer.current);
     }
 
+    // emit stop typing event after 3 seconds
     timer.current = setTimeout(() => {
       socketRef.current.emit(STOP_TYPING, userName)
-    }, 1000)
+    }, 3000)
 
     return () => {
       clearTimeout(timer.current)
     }
 
   }, [textMessage, userName])
+
+  useEffect(() => {
+    // chat messages smooth scroll
+    chatMessagesEl?.current?.scrollTo({
+      behavior: 'smooth',
+      top: chatMessagesEl?.current?.scrollHeight
+    })
+
+  }, [chatMessages])
 
   const handleNameSubmit = (e) => {
     e.preventDefault();
@@ -232,7 +243,7 @@ function App() {
                 chatMessages?.length > 0 ? (
                   <>
                     {/* CHAT MESSAGE LIST */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-100 flex flex-col">
+                    <div ref={chatMessagesEl} className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-100 flex flex-col">
                       {/* MESSAGE OF SENDER OR MESSAGE OF RECEIVER  */}
                       {
                         chatMessages.map(chat => {
