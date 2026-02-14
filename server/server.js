@@ -2,7 +2,7 @@ import express from "express";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // room events
 const JOIN_ROOM = 'joinChatRoom';
@@ -22,7 +22,7 @@ const server = createServer(app);
 // create the socket server instance
 const io = new Server(server, {
   cors: {
-    origin: '*'
+    origin: process.env.CLIENT_URL
   }
 });
 
