@@ -227,7 +227,7 @@ function App() {
                 </div>
 
                 <div className="text-xs md:text-sm text-gray-500">
-                  You Joined as
+                  Joined as
                   <span className="font-medium text-[#303030] capitalize ml-2">
                     {userName}
                   </span>
