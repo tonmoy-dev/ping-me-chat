@@ -114,14 +114,14 @@ function App() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-zinc-100 p-4 font-inter">
+      <div className="min-h-screen flex justify-center bg-zinc-100 p-4 font-inter">
         {showNamePopUp ? (
           <>
             {/* ENTER YOUR NAME TO START CHATTING */}
             <div className="fixed inset-0 flex items-center justify-center z-40">
-              <div className="bg-white rounded-xl shadow-lg max-w-md p-6">
-                <h1 className="text-xl font-semibold text-black">Enter your name</h1>
-                <p className="text-sm text-gray-500 mt-1">
+              <div className="bg-white rounded-xl shadow-lg max-w-md p-10">
+                <h1 className="text-xl font-semibold text-black">Welcome to PING ME!</h1>
+                <p className="text-sm text-gray-500 mt-3">
                   Enter your name to start chatting.
                 </p>
                 <form className="mt-4" onSubmit={handleNameSubmit}>
@@ -149,16 +149,23 @@ function App() {
             < div className="w-full max-w-2xl h-[90vh] bg-white rounded-xl shadow-md flex flex-col overflow-hidden">
               {/* CHAT HEADER */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
-                <div className="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold">
-                  {userName?.at(0)}
+
+                <div className="relative">
+                  <div className="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold">
+                    {userName?.at(0)?.toUpperCase()}
+
+                    {/* <img className="w-10 h-10 rounded-full" src="/images/people/profile-picture.jpg" alt="" /> */}
+
+                    <span className="bottom-0 left-7 absolute  w-3.5 h-3.5 bg-green-500 border-2 border-buffer rounded-full"></span>
+                  </div>
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs text-green-500">● Online</div>
+                  <div className="text-xs md:text-base text-gray-500">PING ME Chat</div>
                 </div>
 
-                <div className="text-sm text-gray-500">
-                  Joined as
-                  <span className="font-medium text-[#303030] capitalize mx-2">
+                <div className="text-xs md:text-sm text-gray-500">
+                  You Joined as
+                  <span className="font-medium text-[#303030] capitalize ml-2">
                     {userName}
                   </span>
                 </div>
@@ -206,7 +213,7 @@ function App() {
                 ) : (
                   <>
                     {/* NO CHAT MESSAGES */}
-                    <div className="flex flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center">
+                    <div className="flex flex-1 overflow-y-auto  bg-zinc-100 text-center text-gray-400 py-10 items-center justify-center text-sm md:text-base">
                       <p>No messages yet. Start the conversation 👋</p>
                     </div>
                   </>
